@@ -1,19 +1,16 @@
 from fastapi import FastAPI
-import time
+
+from celery_worker import long_task
 
 app = FastAPI()
 
-def long_task(name: str):
-    print(f"Started task for {name}")
-    for i in range(5):
-        print(f"{name}: {i+1}/5")
-        time.sleep(1)
-    print("Task completed")
-
 @app.get("/no-celery/{name}")
 def run_task(name: str):
-    long_task(name)
-    return {"message": "Task completed"}
+    task = long_task.delay(name)
+    return {
+        "message": "Task completed",
+        "task_id": task.id,
+        }
 
 
 @app.get('/')
